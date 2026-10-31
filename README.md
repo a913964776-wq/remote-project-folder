@@ -81,4 +81,3 @@ Start-Process './远程项目工作台.exe' -ArgumentList '--test-terminal','ter
 GitHub Actions 可以编译、检查并生成 Windows 程序包。源码仓库不提交二进制或个人配置；发行包包含运行组件和许可。工作台本身未签名。
 
 实际验证及限制见 [验证记录](验证记录.md)。
-

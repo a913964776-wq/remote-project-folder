@@ -1,0 +1,36 @@
+name: Build Windows workbench
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch verified dependencies
+        shell: pwsh
+        run: ./tools/fetch-dependencies.ps1
+      - name: Build
+        shell: pwsh
+        run: ./build.ps1
+      - name: Unit and integration checks
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD '远程项目工作台.exe'
+          foreach ($mode in @('--test-workbench','--test-sync','--test-terminal')) {
+            $report = Join-Path $PWD ($mode.TrimStart('-') + '.txt')
+            $p = Start-Process -FilePath $exe -ArgumentList $mode,$report -PassThru -Wait -WindowStyle Hidden
+            Get-Content -LiteralPath $report
+            if ($p.ExitCode -ne 0) { throw "$mode failed" }
+          }
+      - name: Package
+        shell: pwsh
+        run: ./tools/package.ps1 -Destination "$env:RUNNER_TEMP/RemoteProjectWorkbench-v1.1.0.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RemoteProjectWorkbench-v1.1.0
+          path: ${{ runner.temp }}/RemoteProjectWorkbench-v1.1.0.zip
